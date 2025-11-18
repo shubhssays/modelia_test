@@ -3,6 +3,7 @@ import fs from 'fs';
 import { generationRepository } from '../repositories';
 import { ClientError } from '../errors';
 import { ERROR_MESSAGES, GENERATION_STATUS } from '../utils/constants';
+import { getSecureFileUrl, getFilenameFromPath } from '../utils/fileHelper';
 import type { NewGeneration, Generation } from '../db/schema';
 
 export class GenerationService {
@@ -19,25 +20,27 @@ export class GenerationService {
       throw new ClientError(ERROR_MESSAGES.MODEL_OVERLOADED, 503);
     }
 
-    const imageUrl = `/uploads/${imageFile.filename}`;
+    // Get filename from the uploaded file path
+    const filename = getFilenameFromPath(imageFile.path);
+    const imageUrl = getSecureFileUrl(userId, filename);
     
     // Simulate generation delay (1-2 seconds)
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
 
     // Generate result (copy original file with different name for simulation)
-    const resultFilename = imageFile.filename.replace('original_', 'generated_');
+    const resultFilename = filename.replace('img_', 'result_');
     const resultPath = path.join(path.dirname(imageFile.path), resultFilename);
     fs.copyFileSync(imageFile.path, resultPath);
     
-    const resultUrl = `/uploads/${resultFilename}`;
+    const resultUrl = getSecureFileUrl(userId, resultFilename);
 
-    // Save to database
+    // Save to database with relative paths
     const generationData: NewGeneration = {
       userId,
       prompt,
       style,
-      imageUrl,
-      resultUrl,
+      imageUrl, // Secure URL: /files/:userId/:filename
+      resultUrl, // Secure URL: /files/:userId/:filename
       status: GENERATION_STATUS.COMPLETED,
     };
 

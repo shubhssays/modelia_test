@@ -1,22 +1,55 @@
 openapi: 3.0.3
 info:
   title: Modelia AI Studio API
-  description: API for AI-powered fashion image generation platform
+  description: |
+    API for AI-powered fashion image generation platform with secure file handling.
+    
+    ## Features
+    - JWT-based authentication with bcrypt password hashing
+    - Secure file uploads with user-isolated directories
+    - AI image generation simulation (20% random failure rate)
+    - Circuit breaker pattern (Opossum) for database resilience
+    - Centralized error handling with standardized responses
+    - Request/response logging with Pino
+    - PostgreSQL database with Drizzle ORM
+    - Zod validation for all inputs
+    
+    ## Architecture
+    - **Database**: PostgreSQL with Drizzle ORM
+    - **Authentication**: JWT tokens (7-day expiry)
+    - **File Storage**: User-isolated folders (`/uploads/{userId}/`)
+    - **Logging**: Pino with structured JSON logs
+    - **Resilience**: Circuit breakers on all database operations
+    - **Error Handling**: Custom error classes with consistent response format
+    
+    ## Base URL
+    All API endpoints are prefixed with `/v1/` except the health check endpoint.
+    
+    ## Response Format
+    All responses follow a consistent structure:
+    - **Success**: `{ success: true, data: {...} }`
+    - **Error**: `{ success: false, error: { message: "...", errors?: [...] } }`
   version: 1.0.0
   contact:
     email: api@modelia.ai
 
 servers:
-  - url: http://localhost:3001
+  - url: http://localhost:3001/v1
     description: Development server
-  - url: https://api.modelia.ai
+  - url: https://api.modelia.ai/v1
     description: Production server
+  - url: http://localhost:3001
+    description: Health check endpoint (non-versioned)
 
 tags:
   - name: Auth
     description: Authentication endpoints
   - name: Generations
     description: Image generation endpoints
+  - name: Files
+    description: Secure file access endpoints
+  - name: Health
+    description: System health monitoring
 
 paths:
   /auth/signup:
@@ -52,12 +85,16 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   user:
-                    $ref: '#/components/schemas/User'
+                    id: 1
+                    email: "user@example.com"
+                    name: "John Doe"
+                    createdAt: "2025-11-18T10:00:00.000Z"
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -65,7 +102,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  message: "User already exists"
+        '422':
+          $ref: '#/components/responses/ValidationError'
 
   /auth/login:
     post:
@@ -93,18 +136,28 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  token:
-                    type: string
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   user:
-                    $ref: '#/components/schemas/User'
+                    id: 1
+                    email: "user@example.com"
+                    name: "John Doe"
+                    createdAt: "2025-11-18T10:00:00.000Z"
         '401':
           description: Invalid credentials
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  message: "Invalid credentials"
+        '422':
+          $ref: '#/components/responses/ValidationError'
 
   /generations:
     post:
@@ -133,7 +186,7 @@ paths:
                   example: "A model wearing summer dress"
                 style:
                   type: string
-                  enum: [casual, formal, streetwear, vintage, modern]
+                  enum: [casual, formal, vintage, modern, elegant]
                   example: casual
       responses:
         '200':
@@ -141,21 +194,38 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Generation'
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  id: 1
+                  userId: 123
+                  prompt: "A model wearing summer dress"
+                  style: "casual"
+                  imageUrl: "/files/123/img_1732012345-123456789.jpg"
+                  resultUrl: "/files/123/result_1732012345-123456789.jpg"
+                  status: "completed"
+                  createdAt: "2025-11-18T10:30:00.000Z"
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
         '503':
           description: Model overloaded
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Model overloaded. Please try again."
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  message: "Model overloaded"
     
     get:
       tags:
@@ -177,14 +247,123 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  generations:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Generation'
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                data:
+                  - id: 1
+                    userId: 123
+                    prompt: "A model wearing summer dress"
+                    style: "casual"
+                    imageUrl: "/files/123/img_1732012345-123456789.jpg"
+                    resultUrl: "/files/123/result_1732012345-123456789.jpg"
+                    status: "completed"
+                    createdAt: "2025-11-18T10:30:00.000Z"
+                  - id: 2
+                    userId: 123
+                    prompt: "Fashion model in vintage outfit"
+                    style: "vintage"
+                    imageUrl: "/files/123/img_1732012346-987654321.jpg"
+                    resultUrl: "/files/123/result_1732012346-987654321.jpg"
+                    status: "completed"
+                    createdAt: "2025-11-18T09:15:00.000Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /files/{userId}/{filename}:
+    get:
+      tags:
+        - Files
+      summary: Access user's uploaded file securely
+      description: |
+        Retrieve a file uploaded by the authenticated user. 
+        Users can only access their own files (userId must match authenticated user).
+        This endpoint prevents unauthorized access and directory traversal attacks.
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+          description: User ID who owns the file
+          example: "123"
+        - in: path
+          name: filename
+          required: true
+          schema:
+            type: string
+          description: Name of the file to retrieve
+          example: "img_1732012345-123456789.jpg"
+      responses:
+        '200':
+          description: File retrieved successfully
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden - User cannot access this file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  message: "You do not have permission to access this file"
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  message: "File not found"
+
+  /health:
+    get:
+      servers:
+        - url: http://localhost:3001
+          description: Non-versioned endpoint
+        - url: https://api.modelia.ai
+          description: Non-versioned endpoint
+      summary: Health check endpoint
+      description: |
+        Check if the API is running. This endpoint is not versioned.
+        Access directly at `/health` without the `/v1` prefix.
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: "ok"
+                      timestamp:
+                        type: string
+                        format: date-time
 
 components:
   securitySchemes:
@@ -194,6 +373,55 @@ components:
       bearerFormat: JWT
 
   schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          description: Response data (structure varies by endpoint)
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Error message"
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Validation failed"
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  path:
+                    type: array
+                    items:
+                      type: string
+                    example: ["email"]
+                  message:
+                    type: string
+                    example: "Invalid email format"
+
     User:
       type: object
       properties:
@@ -228,10 +456,12 @@ components:
           example: casual
         imageUrl:
           type: string
-          example: "/uploads/original_abc123.jpg"
+          example: "/files/123/img_1732012345-123456789.jpg"
+          description: "Secure URL to access the uploaded image"
         resultUrl:
           type: string
-          example: "/uploads/generated_abc123.jpg"
+          example: "/files/123/result_1732012345-123456789.jpg"
+          description: "Secure URL to access the generated result"
         status:
           type: string
           enum: [pending, completed, failed]
@@ -254,6 +484,8 @@ components:
                 type: string
               message:
                 type: string
+      deprecated: true
+      description: "Deprecated - Use ErrorResponse or ValidationErrorResponse instead"
 
   responses:
     BadRequest:
@@ -261,11 +493,35 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              message: "Bad request"
     
     Unauthorized:
       description: Unauthorized - Invalid or missing token
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              message: "Unauthorized access"
+
+    ValidationError:
+      description: Validation error - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+          example:
+            success: false
+            error:
+              message: "Validation failed"
+              errors:
+                - path: ["email"]
+                  message: "Invalid email format"
+                - path: ["password"]
+                  message: "Password must be at least 6 characters"

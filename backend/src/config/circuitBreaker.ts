@@ -25,8 +25,8 @@ export const createCircuitBreaker = <T extends unknown[], R>(
     logger.info(`Circuit breaker ${name} closed`);
   });
 
-  breaker.on('failure', (error) => {
-    logger.error(`Circuit breaker ${name} failure:`, error);
+  breaker.on('failure', (error: Error) => {
+    logger.error(`Circuit breaker ${name} failure: ${error.message}`);
   });
 
   return breaker;

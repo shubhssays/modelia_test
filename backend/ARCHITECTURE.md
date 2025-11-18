@@ -2,11 +2,22 @@
 
 ## Technology Stack
 
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Express.js
 - **Database**: PostgreSQL with Drizzle ORM
-- **Circuit Breaker**: Opossum
-- **Logging**: Pino with pino-http
-- **Validation**: Zod
-- **Authentication**: JWT with bcrypt
+- **Circuit Breaker**: Opossum (prevents cascading failures)
+- **Logging**: Pino with pino-http (structured JSON logging)
+- **Validation**: Zod (schema validation)
+- **Authentication**: JWT with bcrypt (password hashing)
+- **File Upload**: Multer (multipart/form-data handling)
+
+## API Versioning
+
+All routes are versioned with `/v1/` prefix for future compatibility:
+- `/v1/auth/*` - Authentication endpoints
+- `/v1/generations/*` - Image generation endpoints
+- `/v1/files/*` - Secure file access endpoints
+- `/health` - Health check (not versioned)
 
 ## Project Structure
 
@@ -18,34 +29,46 @@ backend/
 │   │   └── circuitBreaker.ts  # Opossum circuit breaker factory
 │   ├── db/              # Database layer
 │   │   ├── schema/      # Drizzle schema definitions
+│   │   │   ├── users.ts
+│   │   │   ├── generations.ts
+│   │   │   └── index.ts
 │   │   └── index.ts     # Database connection with connection pooling
-│   ├── repositories/    # Data access layer
-│   │   ├── userRepository.ts         # User CRUD operations
-│   │   └── generationRepository.ts   # Generation CRUD operations
+│   ├── repositories/    # Data access layer (CRUD operations)
+│   │   ├── userRepository.ts         # User CRUD with circuit breaker
+│   │   ├── generationRepository.ts   # Generation CRUD with circuit breaker
+│   │   └── index.ts                  # Repository exports
 │   ├── services/        # Business logic layer
-│   │   ├── authService.ts            # Authentication logic
-│   │   └── generationService.ts      # Generation logic
-│   ├── controllers/     # Request handlers
+│   │   ├── authService.ts            # Authentication & user management
+│   │   └── generationService.ts      # Image generation & file handling
+│   ├── controllers/     # Request handlers (thin layer)
 │   │   ├── authController.ts
-│   │   └── generationController.ts
-│   ├── routes/          # Route definitions
+│   │   ├── generationController.ts
+│   │   └── fileController.ts         # Secure file access
+│   ├── routes/          # Route definitions with versioning
 │   │   ├── auth.ts
-│   │   └── generations.ts
+│   │   ├── generations.ts
+│   │   └── files.ts                  # Secure file routes
 │   ├── middleware/      # Express middleware
 │   │   ├── auth.ts              # JWT authentication
 │   │   ├── validateRequest.ts   # Zod schema validation
 │   │   ├── errorHandler.ts      # Centralized error handling
-│   │   └── upload.ts            # File upload handling
+│   │   └── upload.ts            # User-specific file upload
 │   ├── errors/          # Custom error classes
-│   │   └── AppError.ts  # ClientError, ValidationError, ServerError
+│   │   └── AppError.ts  # ClientError, ValidationError, ServerError, etc.
 │   ├── utils/           # Utility functions
-│   │   ├── asyncHandler.ts  # Async route wrapper
+│   │   ├── asyncHandler.ts  # Async route wrapper (no try-catch)
 │   │   ├── response.ts      # Consistent response formatting
 │   │   ├── constants.ts     # Application constants
-│   │   └── validation.ts    # Zod validation schemas
+│   │   ├── validation.ts    # Zod validation schemas
+│   │   └── fileHelper.ts    # Secure file URL generation
 │   └── server.ts        # Application entry point
-├── drizzle/             # Migration files
+├── drizzle/             # Migration files (auto-generated)
+├── uploads/             # User-specific file storage (not in git)
+│   └── {userId}/        # Files isolated by user
 ├── drizzle.config.ts    # Drizzle configuration
+├── tsconfig.json        # TypeScript configuration (strict mode)
+├── .eslintrc.js         # ESLint configuration
+├── .prettierrc          # Prettier configuration
 └── package.json
 ```
 
@@ -81,10 +104,12 @@ Custom error classes with consistent error responses:
 - UnauthorizedError (401)
 - NotFoundError (404)
 - ConflictError (409)
+- ForbiddenError (403)
 
 // Usage in services
 throw new ConflictError('User already exists');
 throw new UnauthorizedError('Invalid credentials');
+throw new ForbiddenError('Access denied');
 ```
 
 ### 3. Async Route Handler
@@ -109,7 +134,44 @@ router.post('/signup',
 );
 ```
 
-### 5. Consistent Response Format
+### 5. Secure File Upload System
+
+User-isolated file storage with permission checks:
+
+**Directory Structure:**
+```
+uploads/
+  ├── user_123/
+  │   ├── img_1732012345-123456789.jpg
+  │   └── result_1732012345-123456789.jpg
+  └── user_456/
+      └── img_1732012346-987654321.png
+```
+
+**Features:**
+- Files stored in user-specific folders (`/uploads/{userId}/`)
+- Path traversal prevention using `path.basename()`
+- Authentication required for all file access
+- Permission checking (users can only access their own files)
+- No public static file serving
+- Secure URLs: `/v1/files/{userId}/{filename}`
+
+**Implementation:**
+```typescript
+// Upload middleware creates user-specific folders
+const userUploadDir = path.join(uploadsBaseDir, userId.toString());
+
+// File controller validates permissions
+if (requesterId !== userId) {
+  throw new ForbiddenError();
+}
+
+// Secure URL generation
+const imageUrl = getSecureFileUrl(userId, filename);
+// Returns: /v1/files/123/img_xxx.jpg
+```
+
+### 6. Consistent Response Format
 
 All API responses follow this structure:
 
@@ -133,7 +195,7 @@ All API responses follow this structure:
 }
 ```
 
-### 6. Pino Logging
+### 7. Pino Logging
 
 Structured logging with request/response tracking:
 
@@ -147,11 +209,21 @@ logger.error({ err, req }, 'Request failed');
 ### 1. Environment Variables
 
 ```bash
+# Server
+PORT=3001
+NODE_ENV=development
+JWT_SECRET=your-secret-key
+
+# Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=modelia_ai
+DB_SSL=false  # Set to true for production with SSL
+
+# Logging
+LOG_LEVEL=info
 ```
 
 ### 2. Run Migrations
@@ -191,12 +263,44 @@ npm run db:studio
 
 ## Error Handling Flow
 
-1. Request → Middleware (validation)
-2. Controller (wrapped in asyncHandler)
-3. Service (throws custom errors)
-4. Repository (circuit breaker)
-5. Error Handler Middleware (catches all errors)
-6. Consistent error response sent to client
+1. Request → Versioned Route (`/v1/...`)
+2. Middleware (validation, authentication)
+3. Controller (wrapped in asyncHandler)
+4. Service (business logic, throws custom errors)
+5. Repository (CRUD with circuit breaker)
+6. Error Handler Middleware (catches all errors)
+7. Consistent error response sent to client
+
+## Layered Architecture
+
+```
+Request
+  ↓
+Routes (/v1/*)
+  ↓
+Middleware (auth, validation)
+  ↓
+Controllers (thin layer, delegates to services)
+  ↓
+Services (business logic)
+  ↓
+Repositories (data access with circuit breaker)
+  ↓
+Database (PostgreSQL via Drizzle ORM)
+```
+
+## Security Features
+
+1. **Password Security**: bcrypt hashing (10 rounds)
+2. **JWT Authentication**: 7-day expiration, HS256 algorithm
+3. **SQL Injection Prevention**: Drizzle ORM parameterized queries
+4. **Path Traversal Prevention**: `path.basename()` sanitization
+5. **File Access Control**: User-based permission checking
+6. **Input Validation**: Zod schema validation on all inputs
+7. **Error Information Leakage**: Generic error messages in production
+8. **CORS**: Configured for allowed origins
+9. **Rate Limiting**: Ready for implementation (recommended)
+10. **SSL Support**: Configurable for production databases
 
 ## Constants & Utilities
 

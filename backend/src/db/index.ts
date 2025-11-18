@@ -12,10 +12,11 @@ const pool = new Pool({
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
 pool.on('error', (err) => {
-  logger.error('Unexpected error on idle client', err);
+  logger.error(err, 'Unexpected error on idle client');
 });
 
 export const db = drizzle(pool, { schema });

@@ -1,12 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
 import pinoHttp from 'pino-http';
 import { logger } from './config/logger';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth';
 import generationRoutes from './routes/generations';
+import fileRoutes from './routes/files';
 import { sendSuccess } from './utils/response';
 
 dotenv.config();
@@ -22,12 +22,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files for uploads
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
 // Routes
-app.use('/auth', authRoutes);
-app.use('/generations', generationRoutes);
+app.use('/v1/auth', authRoutes);
+app.use('/v1/generations', generationRoutes);
+app.use('/v1/files', fileRoutes); // Secure file access route
 
 // Health check
 app.get('/health', (_req, res) => {

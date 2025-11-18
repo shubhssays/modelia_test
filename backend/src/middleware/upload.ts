@@ -2,20 +2,34 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-const uploadDir = path.join(__dirname, '../../uploads');
+const uploadsBaseDir = path.join(process.cwd(), 'uploads');
 
-// Create uploads directory if it doesn't exist
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Create base uploads directory if it doesn't exist
+if (!fs.existsSync(uploadsBaseDir)) {
+  fs.mkdirSync(uploadsBaseDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    // Get userId from authenticated request
+    const userId = (req as any).user.id;
+    
+    if (!userId) {
+      return cb(new Error('User not authenticated'), '');
+    }
+
+    // Create user-specific folder
+    const userUploadDir = path.join(uploadsBaseDir, userId.toString());
+    
+    if (!fs.existsSync(userUploadDir)) {
+      fs.mkdirSync(userUploadDir, { recursive: true });
+    }
+    
+    cb(null, userUploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'original_' + uniqueSuffix + path.extname(file.originalname));
+    cb(null, 'img_' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 

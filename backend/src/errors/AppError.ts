@@ -50,3 +50,9 @@ export class ConflictError extends AppError {
     super(message, HTTP_STATUS.CONFLICT);
   }
 }
+
+export class ForbiddenError extends AppError {
+  constructor(message: string) {
+    super(message, HTTP_STATUS.FORBIDDEN);
+  }
+}

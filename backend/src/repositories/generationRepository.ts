@@ -30,7 +30,16 @@ export class GenerationRepository {
 
   private async _findByUserId(userId: number, limit: number): Promise<Generation[]> {
     return db
-      .select()
+      .select({
+        id: generations.id,
+        userId: generations.userId,
+        prompt: generations.prompt,
+        style: generations.style,
+        imageUrl: generations.imageUrl,
+        resultUrl: generations.resultUrl,
+        status: generations.status,
+        createdAt: generations.createdAt,
+      })
       .from(generations)
       .where(eq(generations.userId, userId))
       .orderBy(desc(generations.createdAt))
