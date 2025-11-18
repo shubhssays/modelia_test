@@ -24,3 +24,33 @@ export const authenticate = async (req: AuthRequest, _res: Response, next: NextF
   }
 };
 
+/**
+ * Authenticate from URL query parameter (for file downloads)
+ * Accepts token as ?token=xxx in the URL
+ */
+export const authenticateFromQuery = async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // Try to get token from query parameter first
+    let token = req.query.authorization as string | undefined;
+
+    // Fallback to Authorization header if no query token
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      throw new UnauthorizedError('No token provided');
+    }
+
+    const decoded = await authService.verifyToken(token);
+    
+    req.user = decoded;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
