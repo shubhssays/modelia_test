@@ -13,7 +13,7 @@ export const loginSchema = z.object({
 
 export const generationSchema = z.object({
   prompt: z.string().min(3, 'Prompt must be at least 3 characters').max(500),
-  style: z.enum(['casual', 'formal', 'streetwear', 'vintage', 'modern']),
+  style: z.enum(['casual', 'formal', 'vintage', 'vintage', 'modern']),
 });
 
 export type SignupInput = z.infer<typeof signupSchema>;
