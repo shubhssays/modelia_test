@@ -168,11 +168,14 @@ modelia_test/
 
 ### Prerequisites
 
-Ensure you have the following installed:
+#### Option 1: Docker (Recommended)
+- **Docker** >= 20.10.0
+- **Docker Compose** >= 2.0.0
+
+#### Option 2: Manual Setup
 - **Node.js** >= 18.0.0
 - **npm** >= 9.0.0
-- **PostgreSQL** >= 14.0 (for production)
-- **Docker** (optional, for test database)
+- **PostgreSQL** >= 14.0
 
 ### Installation
 
@@ -182,13 +185,22 @@ Ensure you have the following installed:
    cd modelia_test
    ```
 
-2. **Install backend dependencies**
+2. **Quick Start with Docker**
+   ```bash
+   docker-compose up
+   ```
+   
+   That's it! All services will start automatically. Skip to [Running the Application](#running-the-application).
+
+3. **Manual Installation (if not using Docker)**
+   
+   Install backend dependencies:
    ```bash
    cd backend
    npm install
    ```
-
-3. **Install frontend dependencies**
+   
+   Install frontend dependencies:
    ```bash
    cd ../frontend
    npm install
@@ -196,7 +208,12 @@ Ensure you have the following installed:
 
 ### Environment Configuration
 
-#### Backend Environment (`.env` in `/backend`)
+#### For Docker Setup
+No additional configuration needed! Environment variables are pre-configured in `docker-compose.yml`.
+
+#### For Manual Setup
+
+Create `.env` file in `/backend`:
 ```env
 # Server Configuration
 PORT=3001
@@ -218,12 +235,17 @@ UPLOAD_DIR=./uploads
 MAX_FILE_SIZE=10485760
 ```
 
-#### Frontend Environment (`.env` in `/frontend`)
+Create `.env` file in `/frontend`:
 ```env
 VITE_API_URL=http://localhost:3001/api
 ```
 
 ### Database Setup
+
+#### Using Docker
+Database is automatically created and configured. No additional setup needed!
+
+#### Manual Setup
 
 1. **Create PostgreSQL database**
    ```bash
@@ -242,14 +264,43 @@ VITE_API_URL=http://localhost:3001/api
 
 ### Running the Application
 
-#### Start Backend Server
+#### Option 1: Using Docker Compose (Recommended)
+
+Start all services (database, backend, frontend) with a single command:
+
+```bash
+docker-compose up
+```
+
+This will:
+1. Start **PostgreSQL Database** on port 5432
+2. Wait for database to be healthy
+3. Run database migrations automatically
+4. Start **Backend API** on http://localhost:3001
+5. Start **Frontend App** on http://localhost:5173
+
+**Quick Commands:**
+```bash
+docker-compose up -d           # Run in background
+docker-compose down            # Stop all services
+docker-compose up --build      # Rebuild after changes
+docker-compose logs -f         # View logs
+```
+
+**Note:** The setup uses Node.js 20 (required by Vite) and automatically handles database initialization.
+
+For troubleshooting, see [DOCKER.md](./DOCKER.md).
+
+#### Option 2: Manual Setup
+
+##### Start Backend Server
 ```bash
 cd backend
 npm run dev
 ```
 Server runs on: **http://localhost:3001**
 
-#### Start Frontend Development Server
+##### Start Frontend Development Server
 ```bash
 cd frontend
 npm run dev
@@ -258,7 +309,21 @@ Application runs on: **http://localhost:5173**
 
 ### Development Scripts
 
-#### Backend
+#### Docker Commands
+```bash
+docker-compose up              # Start all services
+docker-compose up -d           # Start in detached mode
+docker-compose down            # Stop all services
+docker-compose up --build      # Rebuild and start
+docker-compose logs -f         # View logs
+docker-compose logs backend    # View backend logs only
+docker-compose logs frontend   # View frontend logs only
+docker-compose ps              # List running services
+docker-compose exec backend sh # Access backend container shell
+docker-compose exec frontend sh # Access frontend container shell
+```
+
+#### Backend (when running manually)
 ```bash
 npm run dev          # Start development server with hot reload
 npm run build        # Compile TypeScript to JavaScript
@@ -270,7 +335,7 @@ npm run db:push      # Push schema changes to database
 npm run db:studio    # Open Drizzle Studio
 ```
 
-#### Frontend
+#### Frontend (when running manually)
 ```bash
 npm run dev          # Start Vite dev server
 npm run build        # Build for production

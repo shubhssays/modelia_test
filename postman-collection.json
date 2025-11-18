@@ -155,7 +155,7 @@
         "name": "generations",
         "item": [
           {
-            "name": "SignUp",
+            "name": "generate image",
             "id": "23ffbdcd-8deb-4cd4-90e3-f804cd6c593d",
             "protocolProfileBehavior": {
               "disableBodyPruning": true
