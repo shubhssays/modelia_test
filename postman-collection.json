@@ -1,0 +1,271 @@
+{
+  "collection": {
+    "info": {
+      "_postman_id": "fb4668a4-b2ee-40ba-b517-fc02bc8faea7",
+      "name": "Modelia Test",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "updatedAt": "2025-11-18T14:58:48.000Z",
+      "createdAt": "2025-11-18T14:21:50.000Z",
+      "lastUpdatedBy": "29716865",
+      "uid": "29716865-fb4668a4-b2ee-40ba-b517-fc02bc8faea7"
+    },
+    "item": [
+      {
+        "name": "auth",
+        "item": [
+          {
+            "name": "SignUp",
+            "id": "7c3630d3-94cc-4dd3-8a7f-584520abee43",
+            "protocolProfileBehavior": {
+              "disableBodyPruning": true
+            },
+            "request": {
+              "method": "POST",
+              "header": [],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"email\":\"shubhssays@gmail.com\",\n    \"password\":\"Pass@123\",\n    \"name\":\"Shubham Kumar Shukla\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              },
+              "url": {
+                "raw": "{{baseUrl}}/auth/signup",
+                "host": [
+                  "{{baseUrl}}"
+                ],
+                "path": [
+                  "auth",
+                  "signup"
+                ]
+              }
+            },
+            "response": [
+              {
+                "id": "f4cce489-8810-4032-8d0f-ce8048673f39",
+                "name": "Response",
+                "originalRequest": {
+                  "method": "POST",
+                  "header": [],
+                  "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email\":\"shubhssays@gmail.com\",\n    \"password\":\"Pass@123\",\n    \"name\":\"Shubham Kumar Shukla\"\n}",
+                    "options": {
+                      "raw": {
+                        "language": "json"
+                      }
+                    }
+                  },
+                  "url": {
+                    "raw": "{{baseUrl}}/auth/signup",
+                    "host": [
+                      "{{baseUrl}}"
+                    ],
+                    "path": [
+                      "auth",
+                      "signup"
+                    ]
+                  }
+                },
+                "status": "Created",
+                "code": 201,
+                "_postman_previewlanguage": null,
+                "header": [
+                  {
+                    "key": "X-Powered-By",
+                    "value": "Express"
+                  },
+                  {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Content-Length",
+                    "value": "330"
+                  },
+                  {
+                    "key": "ETag",
+                    "value": "W/\"14a-zRF7Wf4TwsH84CKIDbMcTlUZDnA\""
+                  },
+                  {
+                    "key": "Date",
+                    "value": "Tue, 18 Nov 2025 14:29:16 GMT"
+                  },
+                  {
+                    "key": "Connection",
+                    "value": "keep-alive"
+                  },
+                  {
+                    "key": "Keep-Alive",
+                    "value": "timeout=5"
+                  }
+                ],
+                "cookie": [],
+                "responseTime": null,
+                "body": "{\n    \"success\": true,\n    \"data\": {\n        \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJzaHViaHNzYXlzQGdtYWlsLmNvbSIsImlhdCI6MTc2MzQ3NjE1NiwiZXhwIjoxNzY0MDgwOTU2fQ.uIWnd_8H3p3Tf4Ky0ijwdFRo07eKoJ1BWzF7t8dZgeY\",\n        \"user\": {\n            \"id\": 1,\n            \"email\": \"shubhssays@gmail.com\",\n            \"name\": \"Shubham Kumar Shukla\"\n        }\n    },\n    \"message\": \"User created successfully\"\n}",
+                "uid": "29716865-f4cce489-8810-4032-8d0f-ce8048673f39"
+              }
+            ],
+            "uid": "29716865-7c3630d3-94cc-4dd3-8a7f-584520abee43"
+          },
+          {
+            "name": "Login",
+            "id": "21b0383c-bf8c-42e9-bbc9-9fcdc401ba10",
+            "protocolProfileBehavior": {
+              "disableBodyPruning": true
+            },
+            "request": {
+              "method": "POST",
+              "header": [],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"email\":\"shubhssays@gmail.com\",\n    \"password\":\"Pass@123\"\n}",
+                "options": {
+                  "raw": {
+                    "language": "json"
+                  }
+                }
+              },
+              "url": {
+                "raw": "{{baseUrl}}/auth/login",
+                "host": [
+                  "{{baseUrl}}"
+                ],
+                "path": [
+                  "auth",
+                  "login"
+                ]
+              }
+            },
+            "response": [],
+            "uid": "29716865-21b0383c-bf8c-42e9-bbc9-9fcdc401ba10"
+          }
+        ],
+        "id": "40e7851e-a779-40cf-821f-f929b5d44ffc",
+        "description": "Contains api for signupa and login",
+        "uid": "29716865-40e7851e-a779-40cf-821f-f929b5d44ffc"
+      },
+      {
+        "name": "generations",
+        "item": [
+          {
+            "name": "SignUp",
+            "id": "23ffbdcd-8deb-4cd4-90e3-f804cd6c593d",
+            "protocolProfileBehavior": {
+              "disableBodyPruning": true
+            },
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "authorization",
+                  "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJzaHViaHNzYXlzQGdtYWlsLmNvbSIsImlhdCI6MTc2MzQ3NjE1NiwiZXhwIjoxNzY0MDgwOTU2fQ.uIWnd_8H3p3Tf4Ky0ijwdFRo07eKoJ1BWzF7t8dZgeY",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "prompt",
+                    "value": "Make it smart",
+                    "type": "text"
+                  },
+                  {
+                    "key": "style",
+                    "value": "formal",
+                    "type": "text"
+                  },
+                  {
+                    "key": "image",
+                    "type": "file",
+                    "uuid": "9ad443b6-4b95-4667-8f69-5feb4e160d7c",
+                    "src": "/Users/shubhs/Downloads/download.jpeg"
+                  }
+                ]
+              },
+              "url": {
+                "raw": "{{baseUrl}}/generations/",
+                "host": [
+                  "{{baseUrl}}"
+                ],
+                "path": [
+                  "generations",
+                  ""
+                ]
+              }
+            },
+            "response": [],
+            "uid": "29716865-23ffbdcd-8deb-4cd4-90e3-f804cd6c593d"
+          }
+        ],
+        "id": "2bf9ce65-e38a-4d60-9764-257f5249fd32",
+        "uid": "29716865-2bf9ce65-e38a-4d60-9764-257f5249fd32"
+      },
+      {
+        "name": "files",
+        "item": [
+          {
+            "name": "file download",
+            "id": "583ab72b-f1ef-4a75-84a7-366e2001839f",
+            "protocolProfileBehavior": {
+              "disableBodyPruning": true
+            },
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "authorization",
+                  "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJzaHViaHNzYXlzQGdtYWlsLmNvbSIsImlhdCI6MTc2MzQ3NjE1NiwiZXhwIjoxNzY0MDgwOTU2fQ.uIWnd_8H3p3Tf4Ky0ijwdFRo07eKoJ1BWzF7t8dZgeY",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "formdata",
+                "formdata": [
+                  {
+                    "key": "prompt",
+                    "value": "Make it smart",
+                    "type": "text"
+                  },
+                  {
+                    "key": "style",
+                    "value": "formal",
+                    "type": "text"
+                  },
+                  {
+                    "key": "image",
+                    "type": "file",
+                    "uuid": "9ad443b6-4b95-4667-8f69-5feb4e160d7c",
+                    "src": "/Users/shubhs/Downloads/download.jpeg"
+                  }
+                ]
+              },
+              "url": {
+                "raw": "{{baseUrl}}/files/1/img_1763476736960-280571208.jpeg",
+                "host": [
+                  "{{baseUrl}}"
+                ],
+                "path": [
+                  "files",
+                  "1",
+                  "img_1763476736960-280571208.jpeg"
+                ]
+              }
+            },
+            "response": [],
+            "uid": "29716865-583ab72b-f1ef-4a75-84a7-366e2001839f"
+          }
+        ],
+        "id": "e91a476e-a976-49b5-bc5a-d1eac7ff3745",
+        "uid": "29716865-e91a476e-a976-49b5-bc5a-d1eac7ff3745"
+      }
+    ]
+  }
+}
