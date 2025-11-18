@@ -20,6 +20,7 @@ export const ERROR_MESSAGES = {
   INVALID_CREDENTIALS: 'Invalid credentials',
   MODEL_OVERLOADED: 'Model overloaded',
   GENERATION_FAILED: 'Generation failed',
+  IMAGE_REQUIRED: 'Image file is required',
 } as const;
 
 export const GENERATION_STATUS = {

@@ -19,7 +19,7 @@ A full-stack web application for AI-powered fashion image generation with user a
 - bcrypt
 - Multer (file uploads)
 - Zod (validation)
-- SQLite3
+- PostgreSQL + Drizzle ORM
 - Jest + Supertest
 
 ### Testing
@@ -85,6 +85,13 @@ Create `.env` file in `backend/`:
 PORT=3001
 JWT_SECRET=your-secret-key-here
 NODE_ENV=development
+
+# PostgreSQL Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=modelia
+DB_PASSWORD=modelia_password
+DB_NAME=modelia_dev
 ```
 
 Create `.env` file in `frontend/`:
@@ -130,11 +137,32 @@ npm run preview
 ## Testing
 
 ### Backend Tests
+
+**Prerequisites**: PostgreSQL test database on port 5433
+
+1. Start test database:
 ```bash
 cd backend
-npm test
-npm run test:coverage
+docker-compose -f docker-compose.test.yml up -d
 ```
+
+2. Run tests:
+```bash
+npm test                 # Run all tests
+npm run test:watch       # Watch mode
+npm run test:coverage    # With coverage report
+```
+
+3. Stop test database:
+```bash
+docker-compose -f docker-compose.test.yml down
+```
+
+**Test Infrastructure:**
+- Transaction-based testing (BEGIN/ROLLBACK per test)
+- Drizzle ORM repository tests with direct SQL queries
+- Route tests with mocked dependencies
+- Coverage thresholds: branches 62%, functions 57%, lines 70%, statements 70%
 
 ### Frontend Tests
 ```bash

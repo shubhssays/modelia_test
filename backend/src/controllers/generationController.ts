@@ -23,7 +23,7 @@ export const generationController = {
       req.file
     );
 
-    sendSuccess(res, generation, 'Generation created successfully');
+    sendSuccess(res, generation, 'Generation created successfully', HTTP_STATUS.CREATED);
   },
 
   getGenerations: async (req: AuthRequest, res: Response): Promise<void> => {

@@ -1,11 +1,12 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { ForbiddenError, NotFoundError } from '../errors';
 import { asyncHandler } from '../utils/asyncHandler';
+import type { AuthRequest } from '../middleware/auth';
 
 export const fileController = {
-  getFile: asyncHandler(async (req: Request, res: Response) => {
+  getFile: asyncHandler(async (req: AuthRequest, res: Response) => {
     const requesterId = req.user!.id!; // Set by auth middleware
     const { userId, filename } = req.params;
 
