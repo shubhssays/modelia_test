@@ -1,73 +1,213 @@
-# React + TypeScript + Vite
+# Modelia Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React + TypeScript frontend application for AI-powered image generation with style transfer.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Modelia is an image generation platform that allows users to upload images, apply various artistic styles, and generate AI-enhanced versions. The frontend is built with React, TypeScript, and Vite, featuring a clean UI with Tailwind CSS.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Framework:** React 18 with TypeScript
+- **Build Tool:** Vite
+- **Styling:** Tailwind CSS
+- **Routing:** React Router DOM
+- **State Management:** React Context API
+- **Testing:** Vitest + React Testing Library
+- **HTTP Client:** Axios
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 🖼️ **Image Upload** - Upload and preview images with validation (type & size)
+- 🎨 **Style Selection** - Choose from multiple artistic styles (casual, formal, vintage, modern, elegant)
+- ✨ **AI Generation** - Generate styled images using AI models
+- 📜 **Generation History** - View and restore previous generations
+- 🔐 **Authentication** - User login and signup with JWT tokens
+- ♿ **Accessibility** - WCAG compliant with keyboard navigation and screen reader support
+- 📱 **Responsive Design** - Mobile-first design approach
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Project Structure
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+frontend/
+├── src/
+│   ├── components/        # React components
+│   │   ├── ImageUpload.tsx
+│   │   ├── Studio.tsx
+│   │   ├── GenerationHistory.tsx
+│   │   ├── Login.tsx
+│   │   ├── Signup.tsx
+│   │   └── __tests__/    # Component tests
+│   ├── contexts/         # React contexts
+│   │   └── AuthContext.tsx
+│   ├── hooks/            # Custom React hooks
+│   │   ├── useAuth.ts
+│   │   └── useGenerate.ts
+│   ├── services/         # API services
+│   │   ├── api.ts
+│   │   ├── authService.ts
+│   │   └── generationService.ts
+│   ├── utils/            # Utility functions
+│   │   └── imageHelper.ts
+│   ├── test/             # Test setup
+│   │   └── setup.ts
+│   ├── App.tsx           # Root component
+│   ├── main.tsx          # Application entry point
+│   └── index.css         # Global styles
+├── public/               # Static assets
+├── vite.config.ts        # Vite configuration
+├── tsconfig.json         # TypeScript configuration
+├── tailwind.config.js    # Tailwind CSS configuration
+└── package.json          # Dependencies and scripts
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 18+ and npm
+- Backend API running (see `/backend` directory)
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
 ```
+
+### Environment Variables
+
+Create a `.env` file in the frontend directory:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
+
+### Development
+
+```bash
+# Start development server
+npm run dev
+
+# The app will be available at http://localhost:5173
+```
+
+### Building for Production
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Testing
+
+The project uses Vitest and React Testing Library for comprehensive testing.
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Test Coverage
+
+- **5 test files** with **99 tests** (all passing ✅)
+- Components tested: ImageUpload, Studio, GenerationHistory, Login, Signup
+- Coverage areas: Rendering, user interactions, state management, error handling, accessibility
+
+See [TESTING.md](./TESTING.md) for detailed testing documentation.
+
+## Component Overview
+
+### ImageUpload
+Handles image file uploads with:
+- File type validation (JPEG, PNG, WebP)
+- Size validation (max 10MB)
+- Preview functionality
+- Drag-and-drop support
+- Keyboard accessibility
+
+### Studio
+Main workspace for image generation with:
+- Prompt textarea for generation instructions
+- Style selector dropdown
+- Integration with generation service
+- Loading states and error handling
+
+### GenerationHistory
+Displays past generations with:
+- Thumbnail previews
+- Status badges (completed/failed/pending)
+- Click to restore functionality
+- Keyboard navigation
+- Empty state handling
+
+### Authentication (Login/Signup)
+User authentication with:
+- Form validation
+- Loading indicators
+- Error messages
+- Navigation between forms
+- Password requirements (min 6 characters)
+
+## API Integration
+
+The frontend communicates with the backend API through:
+- **authService** - Login, signup, token management
+- **generationService** - Image generation, history retrieval
+- **Axios interceptors** - Automatic token injection and error handling
+
+## Styling
+
+Tailwind CSS is used for styling with:
+- Utility-first approach
+- Custom color palette (indigo theme)
+- Responsive breakpoints (sm, md, lg)
+- Focus and hover states for accessibility
+
+## State Management
+
+- **AuthContext** - Global authentication state
+- **Custom Hooks** - `useAuth` and `useGenerate` for encapsulated logic
+- **Local State** - Component-level state with React hooks
+
+## Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+npm test             # Run tests
+npm run test:ui      # Run tests with UI
+npm run test:coverage # Run tests with coverage report
+```
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Add tests for new features
+4. Ensure all tests pass
+5. Submit a pull request
+
+## License
+
+MIT
