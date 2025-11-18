@@ -1,25 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/authService';
+import { UnauthorizedError } from '../errors';
 
 export interface AuthRequest extends Request {
   user?: { id: number; email: string };
 }
 
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const authenticate = async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ message: 'No token provided' });
-      return;
+      throw new UnauthorizedError('No token provided');
     }
 
     const token = authHeader.substring(7);
-    const decoded = authService.verifyToken(token);
+    const decoded = await authService.verifyToken(token);
     
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Invalid or expired token' });
+    next(error);
   }
 };
+
