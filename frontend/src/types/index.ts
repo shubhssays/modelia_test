@@ -35,3 +35,23 @@ export interface GenerationResponse {
 }
 
 export type StyleOption = 'casual' | 'formal' | 'vintage' | 'modern' | 'elegant';
+
+// Backend API response wrappers
+export interface ApiSuccessResponse<T> {
+  success: true;
+  data: T;
+  message?: string;
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface ApiErrorResponse {
+  success: false;
+  error: {
+    message: string;
+    errors?: ValidationError[];
+  };
+}
