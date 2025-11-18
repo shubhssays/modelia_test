@@ -1,0 +1,271 @@
+openapi: 3.0.3
+info:
+  title: Modelia AI Studio API
+  description: API for AI-powered fashion image generation platform
+  version: 1.0.0
+  contact:
+    email: api@modelia.ai
+
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: https://api.modelia.ai
+    description: Production server
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Generations
+    description: Image generation endpoints
+
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 6
+                  example: password123
+                name:
+                  type: string
+                  example: John Doe
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /generations:
+    post:
+      tags:
+        - Generations
+      summary: Create a new generation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+                - prompt
+                - style
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Image file (JPEG/PNG, max 10MB)
+                prompt:
+                  type: string
+                  example: "A model wearing summer dress"
+                style:
+                  type: string
+                  enum: [casual, formal, streetwear, vintage, modern]
+                  example: casual
+      responses:
+        '200':
+          description: Generation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          description: Model overloaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Model overloaded. Please try again."
+    
+    get:
+      tags:
+        - Generations
+      summary: Get user's recent generations
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 5
+            maximum: 10
+          description: Number of generations to return
+      responses:
+        '200':
+          description: List of generations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  generations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Generation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        name:
+          type: string
+          example: John Doe
+        createdAt:
+          type: string
+          format: date-time
+
+    Generation:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        prompt:
+          type: string
+          example: "A model wearing summer dress"
+        style:
+          type: string
+          example: casual
+        imageUrl:
+          type: string
+          example: "/uploads/original_abc123.jpg"
+        resultUrl:
+          type: string
+          example: "/uploads/generated_abc123.jpg"
+        status:
+          type: string
+          enum: [pending, completed, failed]
+          example: completed
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Unauthorized:
+      description: Unauthorized - Invalid or missing token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
