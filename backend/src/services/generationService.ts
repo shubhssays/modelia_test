@@ -1,19 +1,12 @@
-import db from '../models/database';
 import path from 'path';
 import fs from 'fs';
+import { generationRepository } from '../repositories';
+import { ClientError } from '../errors';
+import { ERROR_MESSAGES, GENERATION_STATUS } from '../utils/constants';
+import { getSecureFileUrl, getFilenameFromPath } from '../utils/fileHelper';
+import type { NewGeneration, Generation } from '../db/schema';
 
-export interface Generation {
-  id: number;
-  userId: number;
-  prompt: string;
-  style: string;
-  imageUrl: string;
-  resultUrl: string | null;
-  status: 'pending' | 'completed' | 'failed';
-  createdAt: string;
-}
-
-export const generationService = {
+export class GenerationService {
   async createGeneration(
     userId: number,
     prompt: string,
@@ -24,61 +17,45 @@ export const generationService = {
     if (Math.random() < 0.2) {
       // Clean up uploaded file
       fs.unlinkSync(imageFile.path);
-      throw new Error('Model overloaded');
+      throw new ClientError(ERROR_MESSAGES.MODEL_OVERLOADED, 503);
     }
 
-    const imageUrl = `/uploads/${imageFile.filename}`;
+    // Get filename from the uploaded file path
+    const filename = getFilenameFromPath(imageFile.path);
+    const imageUrl = getSecureFileUrl(userId, filename);
     
     // Simulate generation delay (1-2 seconds)
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
 
     // Generate result (copy original file with different name for simulation)
-    const resultFilename = imageFile.filename.replace('original_', 'generated_');
+    const resultFilename = filename.replace('img_', 'result_');
     const resultPath = path.join(path.dirname(imageFile.path), resultFilename);
     fs.copyFileSync(imageFile.path, resultPath);
     
-    const resultUrl = `/uploads/${resultFilename}`;
+    const resultUrl = getSecureFileUrl(userId, resultFilename);
 
-    // Save to database
-    const generationId = await new Promise<number>((resolve, reject) => {
-      db.run(
-        `INSERT INTO generations (user_id, prompt, style, image_url, result_url, status) 
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [userId, prompt, style, imageUrl, resultUrl, 'completed'],
-        function(err) {
-          if (err) reject(err);
-          else resolve(this.lastID);
-        }
-      );
-    });
-
-    return {
-      id: generationId,
+    // Save to database with relative paths
+    const generationData: NewGeneration = {
       userId,
       prompt,
       style,
-      imageUrl,
-      resultUrl,
-      status: 'completed',
-      createdAt: new Date().toISOString(),
+      imageUrl, // Secure URL: /files/:userId/:filename
+      resultUrl, // Secure URL: /files/:userId/:filename
+      status: GENERATION_STATUS.COMPLETED,
     };
-  },
+
+    const generation = await generationRepository.create(generationData);
+    return generation;
+  }
 
   async getRecentGenerations(userId: number, limit: number = 5): Promise<Generation[]> {
-    return new Promise((resolve, reject) => {
-      db.all(
-        `SELECT id, user_id as userId, prompt, style, image_url as imageUrl, 
-                result_url as resultUrl, status, created_at as createdAt 
-         FROM generations 
-         WHERE user_id = ? 
-         ORDER BY created_at DESC 
-         LIMIT ?`,
-        [userId, limit],
-        (err, rows: Generation[]) => {
-          if (err) reject(err);
-          else resolve(rows || []);
-        }
-      );
-    });
+    return generationRepository.findByUserId(userId, limit);
   }
-};
+
+  async getGenerationById(id: number): Promise<Generation | undefined> {
+    return generationRepository.findById(id);
+  }
+}
+
+export const generationService = new GenerationService();
+

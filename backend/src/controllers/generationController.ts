@@ -1,64 +1,40 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { generationService } from '../services/generationService';
-import { generationSchema } from '../utils/validation';
+import { sendSuccess } from '../utils/response';
+import { ClientError } from '../errors';
+import { HTTP_STATUS } from '../utils/constants';
 
 export const generationController = {
-  async createGeneration(req: AuthRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ message: 'Unauthorized' });
-        return;
-      }
-
-      if (!req.file) {
-        res.status(400).json({ message: 'Image file is required' });
-        return;
-      }
-
-      const validatedData = generationSchema.parse({
-        prompt: req.body.prompt,
-        style: req.body.style,
-      });
-
-      const generation = await generationService.createGeneration(
-        req.user.id,
-        validatedData.prompt,
-        validatedData.style,
-        req.file
-      );
-
-      res.status(200).json(generation);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === 'Model overloaded') {
-          res.status(503).json({ message: 'Model overloaded. Please try again.' });
-        } else {
-          res.status(400).json({ message: error.message });
-        }
-      } else {
-        res.status(500).json({ message: 'Internal server error' });
-      }
+  createGeneration: async (req: AuthRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new ClientError('Unauthorized', HTTP_STATUS.UNAUTHORIZED);
     }
+
+    if (!req.file) {
+      throw new ClientError('Image file is required');
+    }
+
+    const { prompt, style } = req.body;
+    const generation = await generationService.createGeneration(
+      req.user.id,
+      prompt,
+      style,
+      req.file
+    );
+
+    sendSuccess(res, generation, 'Generation created successfully', HTTP_STATUS.CREATED);
   },
 
-  async getGenerations(req: AuthRequest, res: Response): Promise<void> {
-    try {
-      if (!req.user) {
-        res.status(401).json({ message: 'Unauthorized' });
-        return;
-      }
-
-      const limit = parseInt(req.query.limit as string) || 5;
-      const generations = await generationService.getRecentGenerations(req.user.id, limit);
-
-      res.status(200).json({ generations });
-    } catch (error) {
-      if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: 'Internal server error' });
-      }
+  getGenerations: async (req: AuthRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new ClientError('Unauthorized', HTTP_STATUS.UNAUTHORIZED);
     }
-  }
+
+    const limit = parseInt(req.query.limit as string) || 5;
+    const generations = await generationService.getRecentGenerations(req.user.id, limit);
+
+    sendSuccess(res, generations);
+  },
 };
+
